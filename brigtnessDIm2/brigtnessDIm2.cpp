@@ -140,6 +140,23 @@ void capabilities(HANDLE hPhysicalMonitor) {
 	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 }
 
+bool checkColorTemperature(int value) {
+	switch (value) {
+		case 4000:
+		case 5000:
+		case 6500:
+		case 7500:
+		case 8200:
+		case 9300:
+		case 10000:
+		case 11500:
+			return true;
+		default:
+			return false;
+	}
+	return false;
+}
+
 void processRequest(HANDLE monitor, std::string code, int value) {
 	if (code.compare("help") == 0) {
 		capabilities(monitor);
@@ -149,7 +166,13 @@ void processRequest(HANDLE monitor, std::string code, int value) {
 			std::cout << "Current color temperature: " << getColorTemperature(monitor);
 		}
 		else {
-			//setColorTemperature(monitor, value);
+			if(checkColorTemperature(value)){
+				_MC_COLOR_TEMPERATURE temp = static_cast<_MC_COLOR_TEMPERATURE>(value);
+				setColorTemperature(monitor, temp);
+			}
+			else {
+				std::cerr << "This color temperature is not supported.";
+			}
 		}
 	}
 	if (code.compare("c") == 0) {
