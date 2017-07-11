@@ -127,3 +127,52 @@ std::string getTechnologyType(HANDLE monitor) {
 	}
 	return result;
 }
+
+DWORD * getRedGreenOrBlueDrive(HANDLE monitor) {
+	DWORD *drive = new DWORD[10];
+	if (!GetMonitorRedGreenOrBlueDrive(monitor, MC_RED_DRIVE, &drive[0], &drive[1], &drive[2])) {
+		std::cerr << "Get red drive is not supported.";
+	}
+	if (!GetMonitorRedGreenOrBlueDrive(monitor, MC_GREEN_DRIVE, &drive[3], &drive[4], &drive[5])) {
+		std::cerr << "Get green drive is not supported.";
+	}
+	if (!GetMonitorRedGreenOrBlueDrive(monitor, MC_BLUE_DRIVE, &drive[6], &drive[7], &drive[8])) {
+		std::cerr << "Get blue drive is not supported.";
+	}
+	return drive;
+}
+
+bool checkDriveValue(HANDLE monitor, std::string type, int value) {
+	DWORD *supportedDrives = getRedGreenOrBlueDrive(monitor);
+	if (type.compare("r") == 0 && (value < supportedDrives[0] || value > supportedDrives[2])) {
+		return false;
+	}
+	if (type.compare("g") == 0 && (value < supportedDrives[3] || value > supportedDrives[5])) {
+		return false;
+	}
+	if (type.compare("b") == 0 && (value < supportedDrives[6] || value > supportedDrives[8])) {
+		return false;
+	}
+	return true;
+}
+
+void setRedGreenOrBlueDrive(HANDLE monitor, std::string type, int value) {
+	MC_DRIVE_TYPE driveType;
+	if (!checkDriveValue(monitor, type, value)) {
+		std::cerr << "Value is out of range";
+	}
+	else {
+		if (type.compare("r") == 0) {
+			driveType = MC_RED_DRIVE;
+		}
+		else if (type.compare("g") == 0) {
+			driveType = MC_GREEN_DRIVE;
+		}
+		else if (type.compare("b") == 0) {
+			driveType = MC_BLUE_DRIVE;
+		}
+		if (!SetMonitorRedGreenOrBlueDrive(monitor, driveType, value)) {
+			std::cerr << "Cannot set desired drive";
+		}
+	}
+}

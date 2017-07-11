@@ -110,10 +110,10 @@ void capabilities(HANDLE hPhysicalMonitor) {
 	std::cout << "a) [Default] -GetMonitorBrightness & SetMonitorBrightness\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_COLOR_TEMPERATURE) == MC_CAPS_COLOR_TEMPERATURE);
-	std::cout << "b) [b ?int] -GetMonitorColorTemperature & SetMonitorColorTemperature (" << findSupportedColorTemperature(pdwSupportedColorTemperatures) << ")\n";
+	std::cout << "b) [b] [?int] -GetMonitorColorTemperature & SetMonitorColorTemperature (" << findSupportedColorTemperature(pdwSupportedColorTemperatures) << ")\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_CONTRAST) == MC_CAPS_CONTRAST);
-	std::cout << "c) [c ?int] -GetMonitorContrast & SetMonitorContrast\n";
+	std::cout << "c) [c] [?int] -GetMonitorContrast & SetMonitorContrast\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_DEGAUSS) == MC_CAPS_DEGAUSS);
 	std::cout << "d) [d] -Degauss monitor\n";
@@ -125,10 +125,10 @@ void capabilities(HANDLE hPhysicalMonitor) {
 	std::cout << "f) -The monitor does not support any monitor settings\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RED_GREEN_BLUE_DRIVE) == MC_CAPS_RED_GREEN_BLUE_DRIVE);
-	std::cout << "g) [g ?int] -GetMonitorRedGreenOrBlueDrive & SetMonitorRedGreenOrBlueDrive\n";
+	std::cout << "g) [g] [?r/?g/?b] [?int] -GetMonitorRedGreenOrBlueDrive & SetMonitorRedGreenOrBlueDrive\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RED_GREEN_BLUE_GAIN) == MC_CAPS_RED_GREEN_BLUE_GAIN);
-	std::cout << "h) [h ?int] -GetMonitorRedGreenOrBlueGain & SetMonitorRedGreenOrBlueGain\n";
+	std::cout << "h) [h] [?int] -GetMonitorRedGreenOrBlueGain & SetMonitorRedGreenOrBlueGain\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RESTORE_FACTORY_COLOR_DEFAULTS) == MC_CAPS_RESTORE_FACTORY_COLOR_DEFAULTS);
 	std::cout << "i) [i] -RestoreMonitorFactoryColorDefaults\n";
@@ -157,7 +157,7 @@ bool checkColorTemperature(int value) {
 	return false;
 }
 
-void processRequest(HANDLE monitor, std::string code, int value) {
+void processRequest(HANDLE monitor, std::string code, int value, std::string type) {
 	if (code.compare("help") == 0) {
 		capabilities(monitor);
 	}
@@ -190,22 +190,34 @@ void processRequest(HANDLE monitor, std::string code, int value) {
 	if (code.compare("e") == 0) {
 		std::cout << getTechnologyType(monitor);
 	}
+	if (code.compare("g") == 0) {
+		if (value == -1) {
+			DWORD *drive = getRedGreenOrBlueDrive(monitor);
+			std::cout << "RED:\n" << "Min: " << drive[0] << "\nCurrent: " << drive[1] << "\nMax: " << drive[2];
+			std::cout << "\nGREEN:\n" << "Min: " << drive[3] << "\nCurrent: " << drive[4] << "\nMax: " << drive[5];
+			std::cout << "\nBLUE:\n" << "Min: " << drive[6] << "\nCurrent: " << drive[7] << "\nMax: " << drive[8];
+		}
+		else {
+			if (!(type.compare("r") == 0 || (type.compare("g") == 0 || type.compare("b") == 0))) {
+				std::cerr << "Invalid type";
+			}
+			else {
+				setRedGreenOrBlueDrive(monitor, type, value);
+			}
+		}
+	}
 	std::cout << "\n";
 }
 
 std::string getInput(HANDLE monitor) {
 	std::string line;
 	std::string code;
+	std::string type;
 	int value = -1;
 	std::getline(std::cin, line);
 	std::istringstream iss(line);
-	if (!iss.eof()) {
-		iss >> code;
-	}
-	if (!iss.eof()) {
-		iss >> value;
-	}
-	processRequest(monitor, code, value);
+	iss >> code >> type >> value;
+	processRequest(monitor, code, value, type);
 	return line;
 }
 

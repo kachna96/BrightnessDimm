@@ -17,3 +17,7 @@ void setContrast(HANDLE monitor, DWORD value);
 void degauss(HANDLE monitor);
 
 std::string getTechnologyType(HANDLE monitor);
+
+DWORD *getRedGreenOrBlueDrive(HANDLE monitor);
+
+void setRedGreenOrBlueDrive(HANDLE monitor, std::string type, int value);
