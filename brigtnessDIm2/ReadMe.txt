@@ -2,11 +2,12 @@
     CONSOLE APPLICATION : brigtnessDIm2 Project Overview
 ========================================================================
 
+This is a simple app mainly for managing your monitor brightness. Right now it's Windows only, monitor must support High Level Monitor Configuration API.
+
 AppWizard has created this brigtnessDIm2 application for you.
 
 This file contains a summary of what you will find in each of the files that
 make up your brigtnessDIm2 application.
-
 
 brigtnessDIm2.vcxproj
     This is the main project file for VC++ projects generated using an Application Wizard.
@@ -24,17 +25,15 @@ brigtnessDIm2.vcxproj.filters
 brigtnessDIm2.cpp
     This is the main application source file.
 
+capabilities.h
+	This is a header file for all the functions this program can use
+
+capabilities.cpp
+	This is an implementation of the aforementioned header file
+
 /////////////////////////////////////////////////////////////////////////////
 Other standard files:
 
 StdAfx.h, StdAfx.cpp
     These files are used to build a precompiled header (PCH) file
     named brigtnessDIm2.pch and a precompiled types file named StdAfx.obj.
-
-/////////////////////////////////////////////////////////////////////////////
-Other notes:
-
-AppWizard uses "TODO:" comments to indicate parts of the source code you
-should add to or customize.
-
-/////////////////////////////////////////////////////////////////////////////
