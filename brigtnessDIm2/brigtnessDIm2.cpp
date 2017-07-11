@@ -128,7 +128,7 @@ void capabilities(HANDLE hPhysicalMonitor) {
 	std::cout << "g) [g] [?r/?g/?b] [?int] -GetMonitorRedGreenOrBlueDrive & SetMonitorRedGreenOrBlueDrive\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RED_GREEN_BLUE_GAIN) == MC_CAPS_RED_GREEN_BLUE_GAIN);
-	std::cout << "h) [h] [?int] -GetMonitorRedGreenOrBlueGain & SetMonitorRedGreenOrBlueGain\n";
+	std::cout << "h) [h] [?r/?g/?b] [?int] -GetMonitorRedGreenOrBlueGain & SetMonitorRedGreenOrBlueGain\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RESTORE_FACTORY_COLOR_DEFAULTS) == MC_CAPS_RESTORE_FACTORY_COLOR_DEFAULTS);
 	std::cout << "i) [i] -RestoreMonitorFactoryColorDefaults\n";
@@ -158,6 +158,15 @@ bool checkColorTemperature(int value) {
 }
 
 void processRequest(HANDLE monitor, std::string code, int value, std::string type) {
+	if (isInteger(code)) {
+		long desiredBrightness;
+		try {
+			desiredBrightness = std::stol(code);
+		} catch (const std::invalid_argument& ia) {
+			std::cerr << "Invalid argument: " << ia.what() << '\n';
+		}
+		setBrightness(monitor, desiredBrightness);
+	}
 	if (code.compare("help") == 0) {
 		capabilities(monitor);
 	}
@@ -166,7 +175,7 @@ void processRequest(HANDLE monitor, std::string code, int value, std::string typ
 			std::cout << "Current color temperature: " << getColorTemperature(monitor);
 		}
 		else {
-			if(checkColorTemperature(value)){
+			if (checkColorTemperature(value)) {
 				_MC_COLOR_TEMPERATURE temp = static_cast<_MC_COLOR_TEMPERATURE>(value);
 				setColorTemperature(monitor, temp);
 			}
@@ -178,6 +187,7 @@ void processRequest(HANDLE monitor, std::string code, int value, std::string typ
 	if (code.compare("c") == 0) {
 		if (value == -1) {
 			DWORD *contrast = getContrast(monitor);
+			std::cout << "Color contrast:\n";
 			std::cout << "Min: " << contrast[0] << "\nCurrent: " << contrast[1] << "\nMax: " << contrast[2];
 		}
 		else {
@@ -193,6 +203,7 @@ void processRequest(HANDLE monitor, std::string code, int value, std::string typ
 	if (code.compare("g") == 0) {
 		if (value == -1) {
 			DWORD *drive = getRedGreenOrBlueDrive(monitor);
+			std::cout << "Red green and blue drive:\n";
 			std::cout << "RED:\n" << "Min: " << drive[0] << "\nCurrent: " << drive[1] << "\nMax: " << drive[2];
 			std::cout << "\nGREEN:\n" << "Min: " << drive[3] << "\nCurrent: " << drive[4] << "\nMax: " << drive[5];
 			std::cout << "\nBLUE:\n" << "Min: " << drive[6] << "\nCurrent: " << drive[7] << "\nMax: " << drive[8];
@@ -205,6 +216,29 @@ void processRequest(HANDLE monitor, std::string code, int value, std::string typ
 				setRedGreenOrBlueDrive(monitor, type, value);
 			}
 		}
+	}
+	if (code.compare("h") == 0) {
+		if (value == -1) {
+			DWORD *gain = getRedGreenOrBlueGain(monitor);
+			std::cout << "Red green and blue gain\n";
+			std::cout << "RED:\n" << "Min: " << gain[0] << "\nCurrent: " << gain[1] << "\nMax: " << gain[2];
+			std::cout << "\nGREEN:\n" << "Min: " << gain[3] << "\nCurrent: " << gain[4] << "\nMax: " << gain[5];
+			std::cout << "\nBLUE:\n" << "Min: " << gain[6] << "\nCurrent: " << gain[7] << "\nMax: " << gain[8];
+		}
+		else {
+			if (!(type.compare("r") == 0 || (type.compare("g") == 0 || type.compare("b") == 0))) {
+				std::cerr << "Invalid type";
+			}
+			else {
+				setRedGreenOrBlueGain(monitor, type, value);
+			}
+		}
+	}
+	if (code.compare("i") == 0) {
+		resetFactoryColorDefaults(monitor);
+	}
+	if (code.compare("j") == 0) {
+		resetFactoryDefaults(monitor);
 	}
 	std::cout << "\n";
 }
@@ -224,7 +258,6 @@ std::string getInput(HANDLE monitor) {
 int main() {
 	DWORD cPhysicalMonitors;
 	std::string input;
-	long desiredValue;
 	//Get the monitor handle.
 	HMONITOR hMonitor = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);
 	//Get the number of physical monitors.
@@ -237,18 +270,11 @@ int main() {
 			bSuccess = GetPhysicalMonitorsFromHMONITOR(hMonitor, cPhysicalMonitors, pPhysicalMonitors);
 			//Get physical monitor handle.
 			HANDLE hPhysicalMonitor = pPhysicalMonitors[0].hPhysicalMonitor;
-			int currentBrightness = getBrightness(hPhysicalMonitor);
 			do {
+				int currentBrightness = getBrightness(hPhysicalMonitor);
 				std::cout << "Type 'help' for showing monitor capabilities.\n";
 				std::cout << "Set your monitor brightness (in %, current: " << currentBrightness << "): ";
-				input = getInput(hPhysicalMonitor);
-			} while (!isInteger(input));
-			try {
-				desiredValue = std::stol(input);
-			} catch (const std::invalid_argument& ia) {
-				std::cerr << "Invalid argument: " << ia.what() << '\n';
-				desiredValue = currentBrightness;
-			}
+			} while (!getInput(hPhysicalMonitor).compare("exit") == 0);
 			// Close the monitor handles.
 			bSuccess = DestroyPhysicalMonitors(cPhysicalMonitors, pPhysicalMonitors);
 			// Free the array.

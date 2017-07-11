@@ -21,3 +21,11 @@ std::string getTechnologyType(HANDLE monitor);
 DWORD *getRedGreenOrBlueDrive(HANDLE monitor);
 
 void setRedGreenOrBlueDrive(HANDLE monitor, std::string type, int value);
+
+DWORD *getRedGreenOrBlueGain(HANDLE monitor);
+
+void setRedGreenOrBlueGain(HANDLE monitor, std::string type, int value);
+
+void resetFactoryColorDefaults(HANDLE monitor);
+
+void resetFactoryDefaults(HANDLE monitor);

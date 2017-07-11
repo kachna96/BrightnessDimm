@@ -142,15 +142,14 @@ DWORD * getRedGreenOrBlueDrive(HANDLE monitor) {
 	return drive;
 }
 
-bool checkDriveValue(HANDLE monitor, std::string type, int value) {
-	DWORD *supportedDrives = getRedGreenOrBlueDrive(monitor);
-	if (type.compare("r") == 0 && (value < supportedDrives[0] || value > supportedDrives[2])) {
+bool checkDriveValue(HANDLE monitor, std::string type, DWORD value, DWORD *supportedValues) {
+	if (type.compare("r") == 0 && (value < supportedValues[0] || value > supportedValues[2])) {
 		return false;
 	}
-	if (type.compare("g") == 0 && (value < supportedDrives[3] || value > supportedDrives[5])) {
+	if (type.compare("g") == 0 && (value < supportedValues[3] || value > supportedValues[5])) {
 		return false;
 	}
-	if (type.compare("b") == 0 && (value < supportedDrives[6] || value > supportedDrives[8])) {
+	if (type.compare("b") == 0 && (value < supportedValues[6] || value > supportedValues[8])) {
 		return false;
 	}
 	return true;
@@ -158,7 +157,7 @@ bool checkDriveValue(HANDLE monitor, std::string type, int value) {
 
 void setRedGreenOrBlueDrive(HANDLE monitor, std::string type, int value) {
 	MC_DRIVE_TYPE driveType;
-	if (!checkDriveValue(monitor, type, value)) {
+	if (!checkDriveValue(monitor, type, value, getRedGreenOrBlueDrive(monitor))) {
 		std::cerr << "Value is out of range";
 	}
 	else {
@@ -174,5 +173,52 @@ void setRedGreenOrBlueDrive(HANDLE monitor, std::string type, int value) {
 		if (!SetMonitorRedGreenOrBlueDrive(monitor, driveType, value)) {
 			std::cerr << "Cannot set desired drive";
 		}
+	}
+}
+
+DWORD * getRedGreenOrBlueGain(HANDLE monitor) {
+	DWORD *gain = new DWORD[10];
+	if (!GetMonitorRedGreenOrBlueGain(monitor, MC_RED_GAIN, &gain[0], &gain[1], &gain[2])) {
+		std::cerr << "Get red gain is not supported.";
+	}
+	if (!GetMonitorRedGreenOrBlueGain(monitor, MC_GREEN_GAIN, &gain[3], &gain[4], &gain[5])) {
+		std::cerr << "Get green gain is not supported.";
+	}
+	if (!GetMonitorRedGreenOrBlueGain(monitor, MC_BLUE_GAIN, &gain[6], &gain[7], &gain[8])) {
+		std::cerr << "Get blue gain is not supported.";
+	}
+	return gain;
+}
+
+void setRedGreenOrBlueGain(HANDLE monitor, std::string type, int value) {
+	MC_GAIN_TYPE gainType;
+	if (!checkDriveValue(monitor, type, value, getRedGreenOrBlueGain(monitor))) {
+		std::cerr << "Value is out of range";
+	}
+	else {
+		if (type.compare("r") == 0) {
+			gainType = MC_RED_GAIN;
+		}
+		else if (type.compare("g") == 0) {
+			gainType = MC_GREEN_GAIN;
+		}
+		else if (type.compare("b") == 0) {
+			gainType = MC_BLUE_GAIN;
+		}
+		if (!SetMonitorRedGreenOrBlueGain(monitor, gainType, value)) {
+			std::cerr << "Cannot set desired gain";
+		}
+	}
+}
+
+void resetFactoryColorDefaults(HANDLE monitor) {
+	if (!RestoreMonitorFactoryColorDefaults(monitor)) {
+		std::cerr << "Reset factory color defaults is not supported";
+	}
+}
+
+void resetFactoryDefaults(HANDLE monitor) {
+	if (!RestoreMonitorFactoryDefaults(monitor)) {
+		std::cerr << "Reset factory monitor defaults is not supported";
 	}
 }
