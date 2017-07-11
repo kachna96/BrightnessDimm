@@ -43,10 +43,12 @@ void ShowError(LPTSTR lpszFunction) {
 
 inline bool isInteger(const std::string & s) {
 	if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
-
 	char * p;
-	strtol(s.c_str(), &p, 10);
-
+	try {
+		std::strtol(s.c_str(), &p, 10);
+	} catch (const std::invalid_argument& ia) {
+		std::cerr << "Invalud argument: " << ia.what() << "\n";
+	}
 	return (*p == 0);
 }
 
@@ -163,7 +165,7 @@ void processRequest(HANDLE monitor, std::string code, int value, std::string typ
 		try {
 			desiredBrightness = std::stol(code);
 		} catch (const std::invalid_argument& ia) {
-			std::cerr << "Invalid argument: " << ia.what() << '\n';
+			std::cerr << "Invalid argument: " << ia.what() << "\n";
 		}
 		setBrightness(monitor, desiredBrightness);
 	}
