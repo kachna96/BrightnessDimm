@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include <sstream>
 
 void ShowError(LPTSTR lpszFunction) {
 	// Retrieve the system error message for the last-error code
@@ -40,10 +41,13 @@ void ShowError(LPTSTR lpszFunction) {
 	LocalFree(lpDisplayBuf);
 }
 
-std::string getDesiredBrightness(DWORD currentBrightness) {
-	std::string n;
-	std::cin >> n;
-	return n;
+inline bool isInteger(const std::string & s) {
+	if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+	char * p;
+	strtol(s.c_str(), &p, 10);
+
+	return (*p == 0);
 }
 
 void setConsoleColorTextForRedOrGreen(HANDLE hConsole, bool isSupported) {
@@ -94,6 +98,7 @@ std::string findSupportedColorTemperature(DWORD pdw) {
 void capabilities(HANDLE hPhysicalMonitor) {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	std::cout << "Monitor Capabilities:\n";
+	std::cout << "Type 'Code ?Value'\n";
 	DWORD pdwMonitorCapabilities;
 	DWORD pdwSupportedColorTemperatures;
 
@@ -102,42 +107,88 @@ void capabilities(HANDLE hPhysicalMonitor) {
 	}
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_BRIGHTNESS) == MC_CAPS_BRIGHTNESS);
-	std::cout << "a) -GetMonitorBrightness & SetMonitorBrightness\n";
+	std::cout << "a) [Default] -GetMonitorBrightness & SetMonitorBrightness\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_COLOR_TEMPERATURE) == MC_CAPS_COLOR_TEMPERATURE);
-	std::cout << "b) -GetMonitorColorTemperature & SetMonitorColorTemperature (" << findSupportedColorTemperature(pdwSupportedColorTemperatures) << ")\n";
+	std::cout << "b) [b ?int] -GetMonitorColorTemperature & SetMonitorColorTemperature (" << findSupportedColorTemperature(pdwSupportedColorTemperatures) << ")\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_CONTRAST) == MC_CAPS_CONTRAST);
-	std::cout << "c) -GetMonitorContrast & GetMonitorContrast\n";
+	std::cout << "c) [c ?int] -GetMonitorContrast & SetMonitorContrast\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_DEGAUSS) == MC_CAPS_DEGAUSS);
-	std::cout << "d) -Degauss monitor\n";
+	std::cout << "d) [d] -Degauss monitor\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_MONITOR_TECHNOLOGY_TYPE) == MC_CAPS_MONITOR_TECHNOLOGY_TYPE);
-	std::cout << "f) -GetMonitorTechnologyType\n";
+	std::cout << "e) [e] -GetMonitorTechnologyType\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_NONE) == MC_CAPS_NONE);
-	std::cout << "g) -The monitor does not support any monitor settings\n";
+	std::cout << "f) -The monitor does not support any monitor settings\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RED_GREEN_BLUE_DRIVE) == MC_CAPS_RED_GREEN_BLUE_DRIVE);
-	std::cout << "h) -GetMonitorRedGreenOrBlueDrive & SetMonitorRedGreenOrBlueDrive\n";
+	std::cout << "g) [g ?int] -GetMonitorRedGreenOrBlueDrive & SetMonitorRedGreenOrBlueDrive\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RED_GREEN_BLUE_GAIN) == MC_CAPS_RED_GREEN_BLUE_GAIN);
-	std::cout << "i) -GetMonitorRedGreenOrBlueGain & SetMonitorRedGreenOrBlueGain\n";
+	std::cout << "h) [h ?int] -GetMonitorRedGreenOrBlueGain & SetMonitorRedGreenOrBlueGain\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RESTORE_FACTORY_COLOR_DEFAULTS) == MC_CAPS_RESTORE_FACTORY_COLOR_DEFAULTS);
-	std::cout << "j) -RestoreMonitorFactoryColorDefaults\n";
+	std::cout << "i) [i] -RestoreMonitorFactoryColorDefaults\n";
 
 	setConsoleColorTextForRedOrGreen(hConsole, (pdwMonitorCapabilities & MC_CAPS_RESTORE_FACTORY_DEFAULTS) == MC_CAPS_RESTORE_FACTORY_DEFAULTS);
-	std::cout << "k) -RestoreMonitorFactoryDefaults\n";
+	std::cout << "j) [j] -RestoreMonitorFactoryDefaults\n";
 
 	//Reset text color
 	SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 }
 
+void processRequest(HANDLE monitor, std::string code, int value) {
+	if (code.compare("help") == 0) {
+		capabilities(monitor);
+	}
+	if (code.compare("b") == 0) {
+		if (value == -1) {
+			std::cout << "Current color temperature: " << getColorTemperature(monitor);
+		}
+		else {
+			//setColorTemperature(monitor, value);
+		}
+	}
+	if (code.compare("c") == 0) {
+		if (value == -1) {
+			DWORD *contrast = getContrast(monitor);
+			std::cout << "Min: " << contrast[0] << "\nCurrent: " << contrast[1] << "\nMax: " << contrast[2];
+		}
+		else {
+			setContrast(monitor, value);
+		}
+	}
+	if (code.compare("d") == 0) {
+		degauss(monitor);
+	}
+	if (code.compare("e") == 0) {
+		std::cout << getTechnologyType(monitor);
+	}
+	std::cout << "\n";
+}
+
+std::string getInput(HANDLE monitor) {
+	std::string line;
+	std::string code;
+	int value = -1;
+	std::getline(std::cin, line);
+	std::istringstream iss(line);
+	if (!iss.eof()) {
+		iss >> code;
+	}
+	if (!iss.eof()) {
+		iss >> value;
+	}
+	processRequest(monitor, code, value);
+	return line;
+}
+
 int main() {
 	DWORD cPhysicalMonitors;
-	std::string value;
+	std::string input;
 	long desiredValue;
 	//Get the monitor handle.
 	HMONITOR hMonitor = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);
@@ -151,18 +202,14 @@ int main() {
 			bSuccess = GetPhysicalMonitorsFromHMONITOR(hMonitor, cPhysicalMonitors, pPhysicalMonitors);
 			//Get physical monitor handle.
 			HANDLE hPhysicalMonitor = pPhysicalMonitors[0].hPhysicalMonitor;
-			std::cout << getTechnologyType(hPhysicalMonitor);
 			int currentBrightness = getBrightness(hPhysicalMonitor);
 			do {
 				std::cout << "Type 'help' for showing monitor capabilities.\n";
 				std::cout << "Set your monitor brightness (in %, current: " << currentBrightness << "): ";
-				value = getDesiredBrightness(currentBrightness);
-				if (value.compare("help") == 0) {
-					capabilities(hPhysicalMonitor);
-				}
-			} while (value.compare("help") == 0);
+				input = getInput(hPhysicalMonitor);
+			} while (!isInteger(input));
 			try {
-				desiredValue = std::stol(value);
+				desiredValue = std::stol(input);
 			} catch (const std::invalid_argument& ia) {
 				std::cerr << "Invalid argument: " << ia.what() << '\n';
 				desiredValue = currentBrightness;
