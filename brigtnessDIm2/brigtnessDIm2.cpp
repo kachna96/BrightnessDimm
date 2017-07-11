@@ -276,7 +276,8 @@ int main() {
 				int currentBrightness = getBrightness(hPhysicalMonitor);
 				std::cout << "Type 'help' for showing monitor capabilities.\n";
 				std::cout << "Set your monitor brightness (in %, current: " << currentBrightness << "): ";
-			} while (!getInput(hPhysicalMonitor).compare("exit") == 0);
+				input = getInput(hPhysicalMonitor);
+			} while (!input.compare("exit") == 0 && !isInteger(input));
 			// Close the monitor handles.
 			bSuccess = DestroyPhysicalMonitors(cPhysicalMonitors, pPhysicalMonitors);
 			// Free the array.
