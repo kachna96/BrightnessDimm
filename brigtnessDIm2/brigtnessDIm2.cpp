@@ -95,7 +95,7 @@ std::string findSupportedColorTemperature(DWORD pdw) {
 void capabilities(HANDLE hPhysicalMonitor) {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	std::cout << "Monitor Capabilities:\n";
-	std::cout << "Type 'Code ?Value'\n";
+	std::cout << "Type 'Code ?Color ?Value'\n";
 	DWORD pdwMonitorCapabilities;
 	DWORD pdwSupportedColorTemperatures;
 
