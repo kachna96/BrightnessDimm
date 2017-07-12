@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include <iostream>
 #include "Windows.h"
 #include "WinUser.h"
 #include "PhysicalMonitorEnumerationAPI.h"
 #include "HighLevelMonitorConfigurationAPI.h"
 #include "capabilities.h"
+#include <iostream>
 #include <strsafe.h>
 #include <string>
 #include <cstdlib>
@@ -260,17 +260,12 @@ std::string getInput(HANDLE monitor) {
 int main() {
 	DWORD cPhysicalMonitors;
 	std::string input;
-	//Get the monitor handle.
 	HMONITOR hMonitor = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);
-	//Get the number of physical monitors.
 	BOOL bSuccess = GetNumberOfPhysicalMonitorsFromHMONITOR(hMonitor, &cPhysicalMonitors);
 	if (bSuccess) {
-		// Allocate the array of PHYSICAL_MONITOR structures.
 		LPPHYSICAL_MONITOR pPhysicalMonitors = (LPPHYSICAL_MONITOR)malloc(cPhysicalMonitors * sizeof(PHYSICAL_MONITOR));
 		if (pPhysicalMonitors != NULL) {
-			//Get the array.
 			bSuccess = GetPhysicalMonitorsFromHMONITOR(hMonitor, cPhysicalMonitors, pPhysicalMonitors);
-			//Get physical monitor handle.
 			HANDLE hPhysicalMonitor = pPhysicalMonitors[0].hPhysicalMonitor;
 			do {
 				int currentBrightness = getBrightness(hPhysicalMonitor);
@@ -278,9 +273,7 @@ int main() {
 				std::cout << "Set your monitor brightness (in %, current: " << currentBrightness << "): ";
 				input = getInput(hPhysicalMonitor);
 			} while (!input.compare("exit") == 0 && !isInteger(input));
-			// Close the monitor handles.
 			bSuccess = DestroyPhysicalMonitors(cPhysicalMonitors, pPhysicalMonitors);
-			// Free the array.
 			free(pPhysicalMonitors);
 		}
 	}
