@@ -95,7 +95,7 @@ std::string findSupportedColorTemperature(DWORD pdw) {
 void capabilities(HANDLE hPhysicalMonitor) {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	std::cout << "Monitor Capabilities:\n";
-	std::cout << "Type 'Code ?Color ?Value'\n";
+	std::cout << "Type 'Code ?Value ?Color'\n";
 	DWORD pdwMonitorCapabilities;
 	DWORD pdwSupportedColorTemperatures;
 
@@ -247,7 +247,7 @@ std::string getInput(HANDLE monitor) {
 	int value = -1;
 	std::getline(std::cin, line);
 	std::istringstream iss(line);
-	iss >> code >> type >> value;
+	iss >> code >> value >> type;
 	processRequest(monitor, code, value, type);
 	return line;
 }
@@ -267,6 +267,7 @@ int main() {
 				std::cout << "Type 'help' for showing monitor capabilities.\n";
 				std::cout << "Set your monitor brightness (in %, current: " << currentBrightness << "): ";
 				input = getInput(hPhysicalMonitor);
+				std::cout << std::endl;
 			} while (!input.compare("exit") == 0 && !isInteger(input));
 			bSuccess = DestroyPhysicalMonitors(cPhysicalMonitors, pPhysicalMonitors);
 			free(pPhysicalMonitors);
