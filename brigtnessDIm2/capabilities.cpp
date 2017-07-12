@@ -143,6 +143,9 @@ DWORD * getRedGreenOrBlueDrive(HANDLE monitor) {
 }
 
 bool checkDriveValue(HANDLE monitor, std::string type, DWORD value, DWORD *supportedValues) {
+	if (type.compare("r") != 0 && type.compare("g") != 0 && type.compare("b") != 0) {
+		return false;
+	}
 	if (type.compare("r") == 0 && (value < supportedValues[0] || value > supportedValues[2])) {
 		return false;
 	}
