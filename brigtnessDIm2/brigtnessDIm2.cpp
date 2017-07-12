@@ -1,15 +1,10 @@
 #include "stdafx.h"
-#include "Windows.h"
-#include "WinUser.h"
 #include "PhysicalMonitorEnumerationAPI.h"
 #include "HighLevelMonitorConfigurationAPI.h"
 #include "capabilities.h"
-#include <iostream>
 #include <strsafe.h>
+#include <iostream>
 #include <string>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
 #include <sstream>
 
 void ShowError(LPTSTR lpszFunction) {
